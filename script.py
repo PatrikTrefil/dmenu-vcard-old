@@ -15,6 +15,10 @@ if query == "":
     exit(1)
 
 
+def notify(text: str, time="8000") -> str:
+    subprocess.run(["notify-send", "-t", time, text])
+
+
 def get_field(field: str, text: str) -> str:
     """get information after last semicolon"""
     REGEX = re.compile(field + ".*:(.*)", re.MULTILINE)
@@ -89,7 +93,7 @@ for file in files:
 
 names = [person.get_name() for person in people]
 selected = subprocess.run(
-    ["dmenu", "-i"], input="\n".join(names).encode("UTF-8"), stdout=subprocess.PIPE, check=True)
+    ["dmenu", "-i", "-p", "Choose person: "], input="\n".join(names).encode("UTF-8"), stdout=subprocess.PIPE, check=True)
 
 selected = selected.stdout.decode("UTF-8")[:-1]
 
@@ -97,13 +101,26 @@ selected = selected.stdout.decode("UTF-8")[:-1]
 for person in people:
     if person.get_name() == selected:
         if query == "email":
-            print(person.email)
-            copy_to_clipboard(person.email)
+            if person.email != "":
+                print(person.email)
+                copy_to_clipboard(person.email)
+            else:
+                print("No information about this contact")
+                notify("No information about this contact")
+
         elif query == "phone":
-            print(person.phone)
-            copy_to_clipboard(person.phone)
+            if person.phone != "":
+                print(person.phone)
+                copy_to_clipboard(person.phone)
+            else:
+                print("No information about this contact")
+                notify("No information about this contact")
         elif query == "birthday":
-            print(person.birthday)
-            text = f"{person.get_name()} has birthday on {person.birthday}."
-            subprocess.run(["notify-send", "-t", "8000", text])
+            if person.birthday != "":
+                print(person.birthday)
+                text = f"{person.get_name()} has birthday on {person.birthday}."
+                notify(text)
+            else:
+                print("No information about this contact")
+                notify("No information about this contact")
         break
