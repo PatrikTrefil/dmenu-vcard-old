@@ -91,7 +91,7 @@ for file in files:
     people += [person.Person(name["first name"],
                              name["last name"], email, phone, birthday)]
 
-names = [person.get_name() for person in people]
+names = [person.get_unaccented_name() for person in people]
 selected = subprocess.run(
     ["dmenu", "-i", "-p", "Choose person: "], input="\n".join(names).encode("UTF-8"), stdout=subprocess.PIPE, check=True)
 
@@ -99,7 +99,7 @@ selected = selected.stdout.decode("UTF-8")[:-1]
 
 
 for person in people:
-    if person.get_name() == selected:
+    if person.get_unaccented_name() == selected:
         if query == "email":
             if person.email != "":
                 print(person.email)

@@ -1,3 +1,5 @@
+import unidecode
+
 class Person:
     def __init__(self, first_name, last_name, email, phone, birthday):
         self.first_name = first_name
@@ -8,3 +10,6 @@ class Person:
 
     def get_name(self):
         return self.first_name + " " + self.last_name
+
+    def get_unaccented_name(self):
+        return unidecode.unidecode(self.get_name())
