@@ -4,34 +4,30 @@ import re
 import os
 import subprocess
 import argparse
+import person
 
+PATH = f"{os.getenv('HOME')}/.contacts/contacts/"
 
 # user chooses what he wants to know
 query = subprocess.run(["dmenu", "-i", "-p", "Query:"], input=b"phone\nemail\nbirthday",
-                       stdout=subprocess.PIPE).stdout.decode("UTF-8")[:-1]
+                       stdout=subprocess.PIPE, check=True).stdout.decode("UTF-8")[:-1]
 if query == "":
     exit(1)
 
 
-class Person:
-    def __init__(self, first_name, last_name, email, phone, birthday):
-        self.first_name = first_name
-        self.last_name = last_name
-        self.email = email
-        self.phone = phone
-        self.birthday = birthday
-
-    def get_name(self):
-        return self.first_name + " " + self.last_name
-
-
 def get_field(field: str, text: str) -> str:
+    """get information after last semicolon"""
     REGEX = re.compile(field + ".*:(.*)", re.MULTILINE)
     res = re.search(REGEX, text)
     try:
         return res.group(0)
     except AttributeError:
         return ""
+
+
+def copy_to_clipboard(text: str) -> None:
+    subprocess.run(["xclip", "-selection", "clipboard"],
+                   input=text.encode("UTF-8"))
 
 
 def get_formatted_name(text: str) -> str:
@@ -42,9 +38,9 @@ def get_name(text: str) -> str:
     return get_field(r"^N", text)
 
 
-def parse_name(unformatted_name: str) -> list:
+def parse_name(unformatted_name: str) -> dict:
     l = unformatted_name[2:].split(";")
-    return l
+    return {"first name": l[1], "last name": l[0]}
 
 
 def get_email(text: str) -> str:
@@ -77,10 +73,10 @@ def get_birthday(text: str) -> str:
         return ""
 
 
-files = os.listdir(f"{os.getenv('HOME')}/.contacts/contacts/")
-files = [f"{os.getenv('HOME')}/.contacts/contacts/{item}" for item in files]
+files = [f"{PATH}{item}" for item in os.listdir(PATH)]
 
 people = []
+
 for file in files:
     with open(file, "r") as curr:
         content = curr.read()
@@ -88,11 +84,12 @@ for file in files:
         phone = get_phone(content)
         email = get_email(content)
         birthday = get_birthday(content)
-    people += [Person(name[1], name[0], email, phone, birthday)]
+    people += [person.Person(name["first name"],
+                             name["last name"], email, phone, birthday)]
 
-names = [person.first_name + " " + person.last_name for person in people]
+names = [person.get_name() for person in people]
 selected = subprocess.run(
-    ["dmenu", "-i"], input="\n".join(names).encode("UTF-8"), stdout=subprocess.PIPE)
+    ["dmenu", "-i"], input="\n".join(names).encode("UTF-8"), stdout=subprocess.PIPE, check=True)
 
 selected = selected.stdout.decode("UTF-8")[:-1]
 
@@ -101,13 +98,12 @@ for person in people:
     if person.get_name() == selected:
         if query == "email":
             print(person.email)
-            subprocess.run(["xclip", "-selection", "clipboard"],
-                           input=person.email.encode("UTF-8"))
+            copy_to_clipboard(person.email)
         elif query == "phone":
             print(person.phone)
-            subprocess.run(["xclip", "-selection", "clipboard"],
-                           input=person.phone.encode("UTF-8"))
+            copy_to_clipboard(person.phone)
         elif query == "birthday":
+            print(person.birthday)
             text = f"{person.get_name()} has birthday on {person.birthday}."
             subprocess.run(["notify-send", "-t", "8000", text])
         break
