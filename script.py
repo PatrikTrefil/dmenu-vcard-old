@@ -5,6 +5,7 @@ import os
 import subprocess
 import argparse
 import person
+from utils import *
 
 PATH = f"{os.getenv('HOME')}/.contacts/contacts/"
 
@@ -13,10 +14,6 @@ query = subprocess.run(["dmenu", "-i", "-p", "Query:"], input=b"phone\nemail\nbi
                        stdout=subprocess.PIPE, check=True).stdout.decode("UTF-8")[:-1]
 if query == "":
     exit(1)
-
-
-def notify(text: str, time="8000") -> str:
-    subprocess.run(["notify-send", "-t", time, text])
 
 
 def get_field(field: str, text: str) -> str:
@@ -29,13 +26,8 @@ def get_field(field: str, text: str) -> str:
         return ""
 
 
-def copy_to_clipboard(text: str) -> None:
-    subprocess.run(["xclip", "-selection", "clipboard"],
-                   input=text.encode("UTF-8"))
-
-
 def get_formatted_name(text: str) -> str:
-    return get_field("FN", text)
+    return get_field(r"^FN", text)
 
 
 def get_name(text: str) -> str:
@@ -48,7 +40,7 @@ def parse_name(unformatted_name: str) -> dict:
 
 
 def get_email(text: str) -> str:
-    line = get_field("EMAIL", text)
+    line = get_field("^EMAIL", text)
     res = re.search(r":(.*?$)", line)
     try:
         return res.group(1)
@@ -57,7 +49,7 @@ def get_email(text: str) -> str:
 
 
 def get_phone(text: str) -> str:
-    line = get_field("TEL", text)
+    line = get_field("^TEL", text)
     res = re.search(r":(.*?$)", line)
     try:
         return res.group(1).replace(" ", "")
@@ -66,7 +58,7 @@ def get_phone(text: str) -> str:
 
 
 def get_birthday(text: str) -> str:
-    line = get_field("BDAY", text)
+    line = get_field("^BDAY", text)
     res = re.search(r":(.*?$)", line)
     try:
         month = res.group(1)[4:6]
