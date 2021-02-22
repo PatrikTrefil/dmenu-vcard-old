@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+"""Module that defines the Person class"""
+
 import unidecode
 
 class Person:
