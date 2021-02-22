@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+import subprocess
+
 
 def notify(text: str, time="8000") -> str:
     subprocess.run(["notify-send", "-t", time, text])

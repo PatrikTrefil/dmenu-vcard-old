@@ -42,22 +42,41 @@ selected = selected.stdout.decode("UTF-8")[:-1]
 for person in people:
     if person.get_unaccented_name() == selected:
         if query == "email":
-            if person.email != "":
-                print(person.email)
-                copy_to_clipboard(person.email)
+            if len(person.email) > 0:
+                if len(person.email) == 1:
+                    res = str(list(person.email.values())[0])
+                    print(res)
+                    copy_to_clipboard(res)
+                else:
+                    cmd = subprocess.run(["dmenu", "-i", "-p", "Choose email: "], input="\n".join(
+                        list(person.email.keys())).encode("UTF-8"), stdout=subprocess.PIPE, check=True)
+                    res = person.email[cmd.stdout.decode("UTF-8")[:-1]]
+                    print(res)
+                    copy_to_clipboard(res)
+
             else:
                 print("No information about this contact")
                 notify("No information about this contact")
 
         elif query == "phone":
-            if person.phone != "":
-                print(person.phone)
-                copy_to_clipboard(person.phone)
+            print(person.phone)
+            if len(person.phone) > 0:
+                if len(person.phone) == 1:
+                    res = str(list(person.phone.values())[0])
+                    print(res)
+                    copy_to_clipboard(res)
+                else:
+                    cmd = subprocess.run(["dmenu", "-i", "-p", "Choose phone: "], input="\n".join(
+                        list(person.phone.keys())).encode("UTF-8"), stdout=subprocess.PIPE, check=True)
+                    res = person.phone[cmd.stdout.decode("UTF-8")[:-1]]
+                    print(res)
+                    copy_to_clipboard(res)
+
             else:
                 print("No information about this contact")
                 notify("No information about this contact")
         elif query == "birthday":
-            if person.birthday != "":
+            if len(person.birthday) > 0:
                 print(person.birthday)
                 text = f"{person.get_name()} has birthday on {person.birthday}."
                 notify(text)
